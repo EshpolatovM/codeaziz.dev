@@ -1,0 +1,14 @@
+export default {
+  // Frontend (React + Vite build) build sozlamalari
+  buildCommand: 'npm run build',
+  outputDirectory: 'dist',
+  framework: null,
+
+  // Cron Jobs — har kuni soat 9:00 da botga ping yuboradi (bot tirik ekanini tekshiradi)
+  crons: [
+    {
+      path: '/api/ping',
+      schedule: '0 9 * * *',
+    },
+  ],
+}
