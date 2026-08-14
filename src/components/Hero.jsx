@@ -59,12 +59,16 @@ export default function Hero() {
     <section id="top" className="hero">
       <div className="container hero-grid">
         <div className="hero-copy">
-          <p className="hero-tag">{t('hero.tag')}</p>
-          <h1 className="hero-title">
+          <p className="hero-tag" data-reveal style={{ '--reveal-delay': '0.05s' }}>
+            {t('hero.tag')}
+          </p>
+          <h1 className="hero-title" data-reveal style={{ '--reveal-delay': '0.16s' }}>
             {t('hero.greeting')} <span className="accent-name">{PROFILE.name}</span>
           </h1>
-          <p className="hero-sub">{t('hero.sub')}</p>
-          <div className="hero-actions">
+          <p className="hero-sub" data-reveal style={{ '--reveal-delay': '0.27s' }}>
+            {t('hero.sub')}
+          </p>
+          <div className="hero-actions" data-reveal style={{ '--reveal-delay': '0.38s' }}>
             <a className="btn btn-primary" href="#order">
               {t('hero.cta')} <span className="btn-arrow">↓</span>
             </a>

@@ -1,39 +1,34 @@
 import { useEffect } from 'react'
 
 /**
- * Scroll "tormoz" effekti: foydalanuvchi tez aylantirsa ham,
- * section chegaralari yaqinida scroll tabiiy ravishda sekinlashadi.
- * Magnit EMAS — yaqinlikka qarab multiplier o'zgaradi:
+ * Scroll "tormoz" + silliqlik effekti:
  *
- *   - section o'rtasida            → multiplier 1.0 (oddiy scroll)
- *   - section chegarasiga yaqin     → multiplier 0.25 (sekin)
- *   - chegaradan uzoq              → multiplier 1.0 (yana tez)
- *
- * Bu yerda foydalanuvchining scroll komandasi kamaytirilmaydi —
- * wheel delta'ga "tormoz" qo'llaniladi, natijada scroll
- * tabiiy deceleration bilan sekinlashadi.
+ *  - Section chegaralariga yaqinlashganda wheel komandasi tabiiy ravishda
+ *    sekinlashadi (magnit EMAS — yaqinlikka qarab multiplier o'zgaradi).
+ *  - Wheel scroll lerp (easing) orqali amalga oshiriladi — natijada scroll
+ *    yumshoq, "iliq" va silliq bo'ladi.
+ *  - Touch/trackpad'dagi native smooth scroll buzilmaydi; lerp faqat
+ *    desktop wheel uchun qo'llanadi.
  */
 export default function useScrollDamping(sectionIds, {
-  edgeRatio = 0.18,   // section chegarasidan necha ulush ichida tormoz boshlanadi (0.18 = ±18% vh)
-  minMultiplier = 0.4  // tormozning eng kuchli qiymati (1.0 = tormozsiz). 0.4 — silliq, lekin sekin emas.
+  edgeRatio = 0.18,    // section chegarasidan necha ulush ichida tormoz boshlanadi (0.18 = ±18% vh)
+  minMultiplier = 0.32, // tormozning eng kuchli qiymati (1.0 = tormozsiz)
+  easing = 0.09,        // lerp tezligi — kichik = yumshoq, katta = chaqqon
 } = {}) {
   useEffect(() => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduceMotion) return
 
-    // CSS'dagi scroll-behavior: smooth scrollBy'ga ham ta'sir qiladi —
-    // tormoz + smooth animatsiya birgalikda scroll "loaq" bo'lib qolishiga sabab.
-    // Faqat hook ishlayotgan paytda smooth'ni o'chirib, tozalashda qaytaramiz.
+    // CSS'dagi scroll-behavior: smooth lerp bilan to'qnashmasligi uchun
+    // hook ishlaganda o'chiriladi va tozalashda qaytariladi.
     const html = document.documentElement
     const prevScrollBehavior = html.style.scrollBehavior
     html.style.scrollBehavior = 'auto'
 
-    let releaseTimer = null   // tormozdan keyin qisqa muddat o'tkazib yuborish
+    let targetY = window.scrollY
+    let raf = null
 
-    const getSections = () =>
-      sectionIds
-        .map((id) => document.getElementById(id))
-        .filter(Boolean)
+    const getSections = () => sectionIds.map((id) => document.getElementById(id)).filter(Boolean)
 
     /**
      * Eng yaqin section'ga nisbatan "edge yaqinligi"ni hisoblaydi.
@@ -53,13 +48,10 @@ export default function useScrollDamping(sectionIds, {
         const top = rect.top
         const bottom = rect.bottom
 
-        // section ekranda ko'rinayotgan bo'lsa, uning tepa yoki pastki qirrasiga
-        // qancha qolganni hisoblaymiz — eng yaqin qirra bo'yicha
         const visibleTop = Math.max(top, 0)
         const visibleBottom = Math.min(bottom, vh)
 
         if (visibleBottom > visibleTop) {
-          // section ekranda — tepa yoki pastki qirrasiga masofa
           const distToTop = visibleTop
           const distToBottom = vh - visibleBottom
           const nearestEdge = Math.min(distToTop, distToBottom)
@@ -69,40 +61,71 @@ export default function useScrollDamping(sectionIds, {
 
       if (!isFinite(minEdgeDist)) return 0
       if (minEdgeDist >= edgePx) return 0
-      // 0 (chegarada) ... 1 (markazga edgePx masofada)
       return 1 - minEdgeDist / edgePx
     }
 
+    const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight
+
+    const animate = () => {
+      const diff = targetY - window.scrollY
+      window.scrollTo(0, window.scrollY + diff * easing)
+
+      if (Math.abs(diff) > 0.5) {
+        raf = requestAnimationFrame(animate)
+      } else {
+        window.scrollTo(0, targetY)
+        raf = null
+      }
+    }
+
+    const kick = () => {
+      if (!raf) raf = requestAnimationFrame(animate)
+    }
+
     const wheelHandler = (e) => {
-      // Brauzerning o'z smooth scrollini o'chirib, o'zimiz boshqaramiz
       e.preventDefault()
+
+      // Trackpad ba'zan deltaMode=lines beradi — px ga normalizatsiya
+      const raw = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY
 
       const factor = proximityFactor()
       // factor 0..1 → multiplier 1.0..minMultiplier
       const multiplier = 1 - factor * (1 - minMultiplier)
 
-      const delta = e.deltaY * multiplier
-      window.scrollBy(0, delta)
-
-      // Juda yaqin bo'lsa, keyingi 80ms ichida ham kichik wheel'larni
-      // to'liq qabul qilmasdan, yanada sekinlashtiramiz (silky deceleration)
-      if (factor > 0.5 && releaseTimer) clearTimeout(releaseTimer)
-      if (factor > 0.5) {
-        releaseTimer = setTimeout(() => {
-          releaseTimer = null
-        }, 120)
-      }
+      targetY = Math.min(maxScroll(), Math.max(0, targetY + raw * multiplier))
+      kick()
     }
 
-    // Touch uchun: barmoq ko'targanda inertial deceleration qilamiz
-    let touchStartY = 0
+    // Lerp faol bo'lmaganda, native scroll (scrollbar, keyboard, touch)
+    // targetY bilan sinxron bo'lsin.
+    const onScroll = () => {
+      if (!raf) targetY = window.scrollY
+    }
+
+    // Keyboard scroll (o'qlar, space, PageUp/Down) boshlanganda lerp'ni
+    // to'xtatib, native scroll'ga yo'l qo'yamiz — ular o'rtasida urishish bo'lmaydi.
+    const onKeyDown = (e) => {
+      const keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ']
+      if (!keys.includes(e.key)) return
+      if (raf) {
+        cancelAnimationFrame(raf)
+        raf = null
+      }
+      targetY = window.scrollY
+    }
+
+    // Touch boshlanganda lerp to'xtatiladi — native smooth scroll o'zini o'zi
+    // boshqaradi, biz faqat inertsiyada yumshoq deceleration qo'shamiz.
     let touchLastY = 0
     let touchLastT = 0
     let touchVelocity = 0
 
     const touchStart = (e) => {
-      touchStartY = e.touches[0].clientY
-      touchLastY = touchStartY
+      if (raf) {
+        cancelAnimationFrame(raf)
+        raf = null
+      }
+      touchLastY = e.touches[0].clientY
       touchLastT = performance.now()
       touchVelocity = 0
     }
@@ -119,8 +142,6 @@ export default function useScrollDamping(sectionIds, {
 
     const touchEnd = () => {
       if (Math.abs(touchVelocity) < 0.05) return
-      const factor = proximityFactor()
-      const multiplier = 1 - factor * (1 - minMultiplier)
 
       let v = touchVelocity // px/ms
       const friction = 0.92 // har frame'da 8% yo'qoladi
@@ -129,8 +150,7 @@ export default function useScrollDamping(sectionIds, {
       const step = (now) => {
         const dt = now - last
         last = now
-        // v * dt = px; px/ms * ms = px
-        let delta = v * dt * multiplier * 16 // 16ms = 1 frame ga normalizatsiya
+        let delta = v * dt * 16 // 16ms = 1 frame ga normalizatsiya
         if (Math.abs(delta) < 0.5) return
 
         window.scrollBy({ top: delta, behavior: 'auto' })
@@ -143,16 +163,21 @@ export default function useScrollDamping(sectionIds, {
 
     // passive: false — preventDefault ishlashi uchun kerak
     window.addEventListener('wheel', wheelHandler, { passive: false })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('keydown', onKeyDown, { passive: true })
     window.addEventListener('touchstart', touchStart, { passive: true })
     window.addEventListener('touchmove', touchMove, { passive: true })
     window.addEventListener('touchend', touchEnd, { passive: true })
 
     return () => {
       window.removeEventListener('wheel', wheelHandler)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('touchstart', touchStart)
       window.removeEventListener('touchmove', touchMove)
       window.removeEventListener('touchend', touchEnd)
-      if (releaseTimer) clearTimeout(releaseTimer)
+      if (raf) cancelAnimationFrame(raf)
+      html.style.scrollBehavior = prevScrollBehavior
     }
-  }, [sectionIds, edgeRatio, minMultiplier])
+  }, [sectionIds, edgeRatio, minMultiplier, easing])
 }

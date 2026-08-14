@@ -7,14 +7,19 @@ import Skills from './components/Skills'
 import Experience from './components/Experience'
 import Order from './components/Order'
 import Footer from './components/Footer'
+import AiChat from './components/AiChat'
 import useScrollDamping from './useScrollDamping'
+import useReveal from './useReveal'
 
 const SNAP_SECTIONS = ['about', 'skills', 'experience', 'order']
 
 function App() {
   // Section chegarasiga yaqinlashganda scroll tabiiy ravishda sekinlashadi.
   // Magnit emas, fizikaviy deceleration — tormoz kuchlanib, keyin yana tezlashadi.
-  useScrollDamping(SNAP_SECTIONS, { edgeRatio: 0.18, minMultiplier: 0.25 })
+  useScrollDamping(SNAP_SECTIONS, { edgeRatio: 0.18, minMultiplier: 0.32 })
+
+  // Ekranda ko'ringanda matn va kartalar pastdan tepaga sekin ko'tariladi.
+  useReveal()
 
   return (
     <LanguageProvider>
@@ -28,6 +33,7 @@ function App() {
         <Order />
       </main>
       <Footer />
+      <AiChat />
     </LanguageProvider>
   )
 }

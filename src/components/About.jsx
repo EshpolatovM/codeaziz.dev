@@ -8,7 +8,7 @@ export default function About() {
   return (
     <section id="about" className="section">
       <div className="container about-grid">
-        <div className="about-visual" aria-hidden="true">
+        <div className="about-visual" aria-hidden="true" data-reveal>
           <div className="about-card">
             <div className="about-card-corner" />
             <span className="about-initials">{initials}</span>
@@ -21,14 +21,20 @@ export default function About() {
         </div>
 
         <div className="about-copy">
-          <p className="section-label">
+          <p className="section-label" data-reveal>
             <span className="label-index">01</span> {t('about.label')}
           </p>
-          <h2 className="section-title">{t('about.heading')}</h2>
-          <p className="about-p">{t('about.p1')}</p>
-          <p className="about-p">{t('about.p2')}</p>
+          <h2 className="section-title" data-reveal style={{ '--reveal-delay': '0.08s' }}>
+            {t('about.heading')}
+          </h2>
+          <p className="about-p" data-reveal style={{ '--reveal-delay': '0.16s' }}>
+            {t('about.p1')}
+          </p>
+          <p className="about-p" data-reveal style={{ '--reveal-delay': '0.24s' }}>
+            {t('about.p2')}
+          </p>
 
-          <div className="stats">
+          <div className="stats" data-reveal style={{ '--reveal-delay': '0.32s' }}>
             <div className="stat">
               <span className="stat-num">2+</span>
               <span className="stat-label">{t('about.statYears')}</span>

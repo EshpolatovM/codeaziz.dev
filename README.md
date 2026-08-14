@@ -1,23 +1,37 @@
 # codemir.dev — Portfolio
 
 Eshpolatov Miraziz — Frontend & Backend Developer portfolio sayti.
-React 19 + Vite 8 + Express (Telegram bot orqali buyurtma qabul qilish).
+React 19 + Vite 8 + Express (Telegram bot orqali buyurtma qabul qilish + AI yordamchi).
 
 ## Ishga tushirish (local)
 
 ```bash
 npm install
-cp .env.example .env   # BOT_TOKEN va CHAT_ID ni kiriting
+cp .env.example .env   # BOT_TOKEN, CHAT_ID va GROQ_API_KEY ni kiriting
 ```
 
 Ikki terminalda:
 
 ```bash
-npm run server    # backend — http://localhost:3001
+npm run server    # backend — http://localhost:3000
 npm run dev       # frontend — http://localhost:5173
 ```
 
 Sayt: http://localhost:5173
+
+Vite `/api` so'rovlarini localhost:3000 ga proxylaydi — backend
+(`npm run server`) ishlamasa AI chat va buyurtma formasi 502 qaytaradi.
+
+## AI yordamchi (chat)
+
+Saytning pastki o'ng burchagidagi tugma orqali ochiladi. AI FAQAT
+portfeli (Miraziz va u haqidagi ma'lumotlar) haqidagi savollarga javob beradi.
+
+1. [console.groq.com](https://console.groq.com) da API kalit yarating.
+2. `.env` ga `GROQ_API_KEY=...` ni yozing.
+3. Vercel'ga deploy qilsangiz, `GROQ_API_KEY` ni Vercel muhit o'zgaruvchilariga ham qo'shing.
+
+Kalit faqat server tomonda turadi (`api/chat.js`) — frontendga tushmaydi.
 
 ## Telegram botni sozlash
 
@@ -36,43 +50,8 @@ Buyurtma formasi yuborilganda xabar bot orqali shu chatga boradi.
 
 ```bash
 npm run build
-npm run start      # server.js — dist ni ham, /api/order ni ham servis qiladi
 ```
 
-`server.js` ham frontend (dist), ham backend API ni bitta serverda ishlatadi.
-`PORT` muhit o'zgaruvchisi orqali o'zgartiriladi.
+Vercel'ga deploy qilganda `api/*.js` avtomatik serverless funksiya bo'lib ishlaydi.
 
-## Hosting va domain
-
-Sayt static emas — Telegram API'ga ulanish uchun Node.js backend kerak.
-Shuning uchun Node server ishlaydigan platforma tanlang (Railway, Render, Fly.io
-yoki VPS + PM2).
-
-**Render/Railway**:
-
-- Repo'ni ulang, build command: `npm install && npm run build`
-- Start command: `npm run start`
-- Muhit o'zgaruvchilari: `BOT_TOKEN`, `CHAT_ID`, `PORT`
-
-**VPS**:
-
-```bash
-npm run build
-nohup node server.js &
-```
-
-**Domain**:
-
-- Domain xarid qiling (masalan codemir.dev) va hostingga yo'naltiring:
-  - Railway/Render: CNAME rekord yoki ularning ko'rsatmalariga amal qiling.
-  - VPS: A rekord — `45.00.00.00` kabi IP manziliga.
-- SSL: hosting platformasi (yoki VPS'da certbot) avtomatik beradi.
-- Sayt tayyor bo'lgach, `index.html` dagi `https://codemir.dev/` canonical,
-  `og:url`, `sitemap.xml` va `robots.txt` manzillarini haqiqiy domain bilan
-  moslashtiring.
-
-## Ma'lumotlarni o'zgartirish
-
-- `src/data.js` — ism, email, telegram/github linklar, stack, skill'lar
-- `src/i18n.js` — barcha matnlar (UZ/EN)
-- `src/components/*` — bo'limlar
+**Vercel muhit o'zgaruvchilari:** `BOT_TOKEN`, `CHAT_ID`, `GROQ_API_KEY`

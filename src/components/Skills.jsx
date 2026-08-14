@@ -7,7 +7,7 @@ export default function Skills() {
   return (
     <section id="skills" className="section section-cream">
       <div className="container">
-        <div className="section-head">
+        <div className="section-head" data-reveal>
           <p className="section-label">
             <span className="label-index">02</span> {t('skills.label')}
           </p>
@@ -16,8 +16,13 @@ export default function Skills() {
         </div>
 
         <div className="skills-grid">
-          {SKILL_GROUPS.map((group) => (
-            <div className="skills-col" key={group.key}>
+          {SKILL_GROUPS.map((group, gi) => (
+            <div
+              className="skills-col"
+              key={group.key}
+              data-reveal
+              style={{ '--reveal-delay': `${0.1 + gi * 0.12}s` }}
+            >
               <h3 className="skills-col-title mono">
                 {'//'} {t(`skills.groups.${group.key}`)}
               </h3>

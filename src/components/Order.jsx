@@ -37,7 +37,7 @@ export default function Order() {
   return (
     <section id="order" className="section order">
       <div className="container">
-        <div className="section-head">
+        <div className="section-head" data-reveal>
           <p className="section-label">
             <span className="label-index">04</span> {t('order.label')}
           </p>
@@ -48,7 +48,7 @@ export default function Order() {
         <div className="order-grid">
           <div className="order-left">
             <h3 className="block-title mono">// {t('order.stepsTitle')}</h3>
-            <div className="steps">
+            <div className="steps" data-reveal>
               {t('order.steps').map((step) => (
                 <div className="step" key={step.n}>
                   <span className="step-n mono">{step.n}</span>
@@ -61,7 +61,7 @@ export default function Order() {
             </div>
 
             <h3 className="block-title mono">// services</h3>
-            <div className="services">
+            <div className="services" data-reveal style={{ '--reveal-delay': '0.15s' }}>
               {t('order.services').map((service) => (
                 <div className="service" key={service.title}>
                   <h4 className="service-title">{service.title}</h4>
@@ -76,7 +76,7 @@ export default function Order() {
             </div>
           </div>
 
-          <div className="order-right">
+          <div className="order-right" data-reveal style={{ '--reveal-delay': '0.12s' }}>
             <div className="order-terminal" aria-hidden="true">
               <div className="terminal-bar">
                 <span className="dot" />

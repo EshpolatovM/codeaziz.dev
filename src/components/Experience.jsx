@@ -7,7 +7,7 @@ export default function Experience() {
   return (
     <section id="experience" className="section">
       <div className="container">
-        <div className="section-head">
+        <div className="section-head" data-reveal>
           <p className="section-label">
             <span className="label-index">03</span> {t('experience.label')}
           </p>
@@ -16,7 +16,12 @@ export default function Experience() {
 
         <div className="timeline">
           {items.map((item, i) => (
-            <div className="timeline-item" key={i}>
+            <div
+              className="timeline-item"
+              key={i}
+              data-reveal
+              style={{ '--reveal-delay': `${i * 0.14}s` }}
+            >
               <span className="timeline-dot" />
               <span className="timeline-period mono">{item.period}</span>
               <div className="timeline-card">

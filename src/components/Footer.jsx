@@ -8,12 +8,14 @@ export default function Footer() {
   return (
     <footer className="footer">
       <div className="container footer-inner">
-        <h2 className="footer-title">
+        <h2 className="footer-title" data-reveal>
           {t('footer.tagline')} <span className="accent-name">{PROFILE.firstName}</span>
         </h2>
-        <p className="footer-note">{t('footer.note')}</p>
+        <p className="footer-note" data-reveal style={{ '--reveal-delay': '0.1s' }}>
+          {t('footer.note')}
+        </p>
 
-        <div className="footer-links">
+        <div className="footer-links" data-reveal style={{ '--reveal-delay': '0.2s' }}>
           <a className="footer-link mono" href={PROFILE.telegram} target="_blank" rel="noopener">
             t.me/{PROFILE.handle}
           </a>
@@ -22,7 +24,7 @@ export default function Footer() {
           </a>
         </div>
 
-        <p className="footer-copy mono">
+        <p className="footer-copy mono" data-reveal style={{ '--reveal-delay': '0.3s' }}>
           © {year} {PROFILE.handle} — {t('footer.rights')}
         </p>
       </div>

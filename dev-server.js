@@ -3,7 +3,8 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
-import handler from './api/order.js'
+import orderHandler from './api/order.js'
+import chatHandler from './api/chat.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -13,7 +14,11 @@ app.use(express.json())
 
 app.post('/api/order', async (req, res) => {
   // Vercel handler formatiga moslashtirish
-  await handler(req, res)
+  await orderHandler(req, res)
+})
+
+app.post('/api/chat', async (req, res) => {
+  await chatHandler(req, res)
 })
 
 app.listen(PORT, () => {
