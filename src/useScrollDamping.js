@@ -114,68 +114,19 @@ export default function useScrollDamping(sectionIds, {
       targetY = window.scrollY
     }
 
-    // Touch boshlanganda lerp to'xtatiladi — native smooth scroll o'zini o'zi
-    // boshqaradi, biz faqat inertsiyada yumshoq deceleration qo'shamiz.
-    let touchLastY = 0
-    let touchLastT = 0
-    let touchVelocity = 0
-
-    const touchStart = (e) => {
-      if (raf) {
-        cancelAnimationFrame(raf)
-        raf = null
-      }
-      touchLastY = e.touches[0].clientY
-      touchLastT = performance.now()
-      touchVelocity = 0
-    }
-
-    const touchMove = (e) => {
-      const y = e.touches[0].clientY
-      const now = performance.now()
-      const dt = Math.max(now - touchLastT, 1)
-      const dy = touchLastY - y
-      touchVelocity = dy / dt // px/ms
-      touchLastY = y
-      touchLastT = now
-    }
-
-    const touchEnd = () => {
-      if (Math.abs(touchVelocity) < 0.05) return
-
-      let v = touchVelocity // px/ms
-      const friction = 0.92 // har frame'da 8% yo'qoladi
-      let last = performance.now()
-
-      const step = (now) => {
-        const dt = now - last
-        last = now
-        let delta = v * dt * 16 // 16ms = 1 frame ga normalizatsiya
-        if (Math.abs(delta) < 0.5) return
-
-        window.scrollBy({ top: delta, behavior: 'auto' })
-        v *= friction
-        if (Math.abs(v) < 0.02) return
-        requestAnimationFrame(step)
-      }
-      requestAnimationFrame(step)
-    }
+    // Touch/trackpad'da brauzerning o'z native momentum scrolli ishlatiladi —
+    // ustiga qo'shimcha JS inertsiya qo'shilmaydi, aks holda ikkalasi
+    // qo'shilib scroll notekis va "g'alati" bo'lib qoladi.
 
     // passive: false — preventDefault ishlashi uchun kerak
     window.addEventListener('wheel', wheelHandler, { passive: false })
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('keydown', onKeyDown, { passive: true })
-    window.addEventListener('touchstart', touchStart, { passive: true })
-    window.addEventListener('touchmove', touchMove, { passive: true })
-    window.addEventListener('touchend', touchEnd, { passive: true })
 
     return () => {
       window.removeEventListener('wheel', wheelHandler)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('touchstart', touchStart)
-      window.removeEventListener('touchmove', touchMove)
-      window.removeEventListener('touchend', touchEnd)
       if (raf) cancelAnimationFrame(raf)
       html.style.scrollBehavior = prevScrollBehavior
     }
