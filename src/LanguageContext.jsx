@@ -9,6 +9,7 @@ export function LanguageProvider({ children }) {
     document.documentElement.lang = lang
   }, [lang])
 
+
   const value = useMemo(() => {
     const t = (key) => {
       const parts = key.split('.')
